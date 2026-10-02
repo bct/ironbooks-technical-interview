@@ -24,4 +24,5 @@ export const transactions: Transaction[] = [
   { id: "t16", date: "2026-01-29", description: "Costco - Ladders & Scaffolding Parts", amount: -623.11 },
   { id: "t17", date: "2026-01-30", description: "Valvoline Oil Change - Work Van", amount: -89.99 },
   { id: "t18", date: "2026-01-31", description: "Google Workspace Subscription", amount: -18.0 },
+  { id: "t19", date: "2026-02-02", description: "Amazon.com", amount: -94.28 },
 ];
