@@ -79,3 +79,24 @@ select.uncategorized {
   border-color: #e0a000;
   background: #fff8e8;
 }
+
+button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #1a1a1a;
+  background: #1a1a1a;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.approved {
+  color: #067647;
+  font-size: 13px;
+  white-space: nowrap;
+}

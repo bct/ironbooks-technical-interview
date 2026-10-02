@@ -7,18 +7,45 @@ import type { Category } from "@/data/categories";
 interface Props {
   transactions: Transaction[];
   categories: Category[];
+  approvedCategories: Record<string, string>;
 }
 
-export default function TransactionTable({ transactions, categories }: Props) {
-  const [categoryByTransaction, setCategoryByTransaction] = useState<
+export default function TransactionTable({
+  transactions,
+  categories,
+  approvedCategories: initialApprovedCategories,
+}: Props) {
+  const [approvedCategories, setApprovedCategories] = useState<
     Record<string, string>
-  >({});
+  >(initialApprovedCategories);
+  const [pendingCategories, setPendingCategories] = useState<
+    Record<string, string>
+  >(initialApprovedCategories);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   function handleCategoryChange(transactionId: string, categoryId: string) {
-    setCategoryByTransaction((prev) => ({
+    setPendingCategories((prev) => ({
       ...prev,
       [transactionId]: categoryId,
     }));
+  }
+
+  async function handleApprove(transactionId: string) {
+    const categoryId = pendingCategories[transactionId];
+    if (!categoryId) return;
+
+    setApprovingId(transactionId);
+    try {
+      const response = await fetch("/api/categorizations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactionId, categoryId }),
+      });
+      const updated = await response.json();
+      setApprovedCategories(updated);
+    } finally {
+      setApprovingId(null);
+    }
   }
 
   return (
@@ -29,11 +56,15 @@ export default function TransactionTable({ transactions, categories }: Props) {
           <th>Description</th>
           <th>Amount</th>
           <th>Category</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
         {transactions.map((transaction) => {
-          const selected = categoryByTransaction[transaction.id] ?? "";
+          const pending = pendingCategories[transaction.id] ?? "";
+          const approved = approvedCategories[transaction.id] ?? "";
+          const isDirty = pending !== approved;
+
           return (
             <tr key={transaction.id}>
               <td>{transaction.date}</td>
@@ -47,8 +78,8 @@ export default function TransactionTable({ transactions, categories }: Props) {
               </td>
               <td>
                 <select
-                  className={selected ? "" : "uncategorized"}
-                  value={selected}
+                  className={approved ? "" : "uncategorized"}
+                  value={pending}
                   onChange={(e) =>
                     handleCategoryChange(transaction.id, e.target.value)
                   }
@@ -60,6 +91,19 @@ export default function TransactionTable({ transactions, categories }: Props) {
                     </option>
                   ))}
                 </select>
+              </td>
+              <td>
+                {isDirty && pending && (
+                  <button
+                    onClick={() => handleApprove(transaction.id)}
+                    disabled={approvingId === transaction.id}
+                  >
+                    {approvingId === transaction.id
+                      ? "Approving…"
+                      : "Approve"}
+                  </button>
+                )}
+                {!isDirty && approved && <span className="approved">✓ Approved</span>}
               </td>
             </tr>
           );
